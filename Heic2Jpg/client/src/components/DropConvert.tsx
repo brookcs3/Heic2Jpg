@@ -67,21 +67,22 @@ function DropConvertInner() {
       setDownloadUrl(null);
     }
     
-    const avifFiles = acceptedFiles.filter(file => 
+    const acceptedImageFiles = acceptedFiles.filter(file => 
       file.name.toLowerCase().endsWith('.avif') || 
       file.name.toLowerCase().endsWith('.png') || 
       file.name.toLowerCase().endsWith('.jpg') || 
-      file.name.toLowerCase().endsWith('.jpeg')
+      file.name.toLowerCase().endsWith('.jpeg') ||
+      file.name.toLowerCase().endsWith('.heic')
     );
     
-    if (avifFiles.length === 0) {
+    if (acceptedImageFiles.length === 0) {
       setStatus('error');
-      setErrorMessage('Please select image files (AVIF, PNG, JPG)');
+      setErrorMessage('Please select image files (HEIC, AVIF, PNG, JPG)');
       return;
     }
     
     // Always set status to 'ready' instead of auto-processing when files are added
-    setFiles(avifFiles);
+    setFiles(acceptedImageFiles);
     setStatus('ready'); // This ensures the user needs to click convert
     setProgress(0);
   }, [downloadUrl]);
@@ -91,7 +92,8 @@ function DropConvertInner() {
     accept: {
       'image/avif': ['.avif'],
       'image/png': ['.png'],
-      'image/jpeg': ['.jpg', '.jpeg']
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/heic': ['.heic']
     },
   });
   
@@ -532,8 +534,10 @@ function DropConvertInner() {
           <Cloud className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
           <p className="text-lg font-medium mb-1">Drag & drop images here</p>
           <p className="text-sm text-muted-foreground mb-3">
-            {jpgToAvif
-              ? 'Convert JPG/PNG to space-saving AVIF format' 
+            {conversionMode === 'jpgToAvif'
+              ? 'Convert JPG/PNG to space-saving AVIF format'
+              : conversionMode === 'heicToJpg'
+              ? 'Convert HEIC to widely-compatible JPG format'
               : 'Convert AVIF to widely-compatible JPG format'}
           </p>
           <Button
@@ -545,8 +549,10 @@ function DropConvertInner() {
               const input = document.createElement('input');
               input.type = 'file';
               input.multiple = true;
-              input.accept = jpgToAvif 
+              input.accept = conversionMode === 'jpgToAvif'
                 ? '.jpg,.jpeg,.png' 
+                : conversionMode === 'heicToJpg'
+                ? '.heic'
                 : '.avif';
               input.onchange = (e) => {
                 // @ts-ignore
@@ -569,9 +575,11 @@ function DropConvertInner() {
           <div className="mb-4">
             <h3 className="text-lg font-bold gradient-text mb-2">Ready to Convert {files.length} {files.length === 1 ? 'File' : 'Files'}</h3>
             <p className="text-sm text-muted-foreground">
-              {jpgToAvif
+              {conversionMode === 'jpgToAvif'
                 ? 'Convert to space-saving AVIF format'
-                : 'Convert to widely-compatible JPG format'}
+                : conversionMode === 'heicToJpg'
+                ? 'Convert HEIC to widely-compatible JPG format'
+                : 'Convert AVIF to widely-compatible JPG format'}
             </p>
           </div>
           
@@ -643,7 +651,7 @@ function DropConvertInner() {
                   const link = document.createElement('a');
                   link.href = downloadUrl;
                   link.download = files.length === 1 
-                    ? files[0].name.replace(/\.(avif|png|jpe?g)$/i, jpgToAvif ? '.avif' : '.jpg')
+                    ? files[0].name.replace(/\.(avif|png|jpe?g|heic)$/i, conversionMode === 'jpgToAvif' ? '.avif' : '.jpg')
                     : 'converted_images.zip';
                   document.body.appendChild(link);
                   link.click();
