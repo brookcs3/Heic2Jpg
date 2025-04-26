@@ -19,7 +19,7 @@ export interface SiteConfig {
 }
 
 // Configuration for Heic2Jpg
-const heic2JpgConfig: SiteConfig = {
+export const heic2JpgConfig: SiteConfig = {
   siteName: 'Heic2Jpg',
   defaultConversionMode: 'heicToJpg',
   primaryColor: '#8b5cf6',    // Purple-500
@@ -116,6 +116,11 @@ export function getSiteConfig(): SiteConfig {
   
   // Default to Heic2Jpg config as the primary application
   console.log('USING HEIC2JPG CONFIG: Default fallback');
+  
+  // Debug the current hostname
+  console.log('Current hostname:', hostname);
+  
+  // Force Heic2Jpg config for this specific app
   return heic2JpgConfig;
 }
 
