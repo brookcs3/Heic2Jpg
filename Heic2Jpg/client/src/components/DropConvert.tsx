@@ -295,7 +295,7 @@ function DropConvertInner() {
         workerRef.current = null;
       }
     };
-  }, [capabilities.hasWebWorker, jpgToAvif]); // Add jpgToAvif to the dependency array so the worker updates when it changes
+  }, [capabilities.hasWebWorker, conversionMode, jpgToAvif, heicToJpg]); // Add conversion mode values to the dependency array
   
   // Optimized conversion function with fallbacks for different browsers
   const convertFiles = async () => {
@@ -331,7 +331,9 @@ function DropConvertInner() {
         workerRef.current.postMessage({
           type: processingType,
           files,
-          jpgToAvif, // Include conversion mode
+          jpgToAvif, // Include conversion mode flags
+          heicToJpg, // Add HEIC to JPG conversion mode flag
+          conversionMode, // Pass the full conversion mode string
           totalFiles, // Pass the actual file count to ensure worker has it
           isSingleFile: totalFiles === 1
         });
@@ -498,15 +500,18 @@ function DropConvertInner() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold gradient-text">Convert Images</h2>
         <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg shadow-blue">
-          <span className={`text-sm ${!jpgToAvif ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
+          <span className={`text-sm ${conversionMode === 'avifToJpg' ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
             AVIF to JPG
           </span>
+          <span className={`text-sm ${conversionMode === 'heicToJpg' ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
+            HEIC to JPG
+          </span>
           <Switch 
-            checked={jpgToAvif} 
+            checked={conversionMode === 'jpgToAvif'} 
             onCheckedChange={toggleConversionMode} 
-            className={jpgToAvif ? 'bg-primary' : ''}
+            className={conversionMode === 'jpgToAvif' ? 'bg-primary' : ''}
           />
-          <span className={`text-sm ${jpgToAvif ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
+          <span className={`text-sm ${conversionMode === 'jpgToAvif' ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
             JPG to AVIF
           </span>
           <ArrowLeftRight className="ml-1.5 w-4 h-4 text-blue-500" />
