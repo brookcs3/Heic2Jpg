@@ -40,24 +40,18 @@ function DropConvertInner() {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [fileCount, setFileCount] = useState<number>(0); // Store file count for later reference
   
-  // Conversion mode state handling
+  // Mode selection: false = AVIF to JPG, true = JPG to AVIF
   // Use site configuration to determine default conversion mode
-  const [conversionMode, setConversionMode] = useState(siteConfig.defaultConversionMode);
-  
-  // For backward compatibility with existing code
-  const jpgToAvif = conversionMode === 'jpgToAvif';
-  const heicToJpg = conversionMode === 'heicToJpg';
+  const [jpgToAvif, setJpgToAvif] = useState(
+    siteConfig.defaultConversionMode === 'jpgToAvif'
+  );
   
   // Update the page title when conversion mode changes
   useEffect(() => {
-    if (conversionMode === 'jpgToAvif') {
-      document.title = `${siteConfig.siteName} - Convert JPG to AVIF in your browser`;
-    } else if (conversionMode === 'heicToJpg') {
-      document.title = `${siteConfig.siteName} - Convert HEIC to JPG in your browser`;
-    } else {
-      document.title = `${siteConfig.siteName} - Convert AVIF to JPG in your browser`;
-    }
-  }, [conversionMode, siteConfig.siteName]);
+    document.title = jpgToAvif 
+      ? `${siteConfig.siteName} - Convert JPG to AVIF in your browser`
+      : `${siteConfig.siteName} - Convert AVIF to JPG in your browser`;
+  }, [jpgToAvif]);
   
   // Handle file drop
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -67,22 +61,21 @@ function DropConvertInner() {
       setDownloadUrl(null);
     }
     
-    const acceptedImageFiles = acceptedFiles.filter(file => 
+    const avifFiles = acceptedFiles.filter(file => 
       file.name.toLowerCase().endsWith('.avif') || 
       file.name.toLowerCase().endsWith('.png') || 
       file.name.toLowerCase().endsWith('.jpg') || 
-      file.name.toLowerCase().endsWith('.jpeg') ||
-      file.name.toLowerCase().endsWith('.heic')
+      file.name.toLowerCase().endsWith('.jpeg')
     );
     
-    if (acceptedImageFiles.length === 0) {
+    if (avifFiles.length === 0) {
       setStatus('error');
-      setErrorMessage('Please select image files (HEIC, AVIF, PNG, JPG)');
+      setErrorMessage('Please select image files (AVIF, PNG, JPG)');
       return;
     }
     
     // Always set status to 'ready' instead of auto-processing when files are added
-    setFiles(acceptedImageFiles);
+    setFiles(avifFiles);
     setStatus('ready'); // This ensures the user needs to click convert
     setProgress(0);
   }, [downloadUrl]);
@@ -92,8 +85,7 @@ function DropConvertInner() {
     accept: {
       'image/avif': ['.avif'],
       'image/png': ['.png'],
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/heic': ['.heic']
+      'image/jpeg': ['.jpg', '.jpeg']
     },
   });
   
@@ -297,7 +289,7 @@ function DropConvertInner() {
         workerRef.current = null;
       }
     };
-  }, [capabilities.hasWebWorker, conversionMode, jpgToAvif, heicToJpg]); // Add conversion mode values to the dependency array
+  }, [capabilities.hasWebWorker, jpgToAvif]); // Add jpgToAvif to the dependency array so the worker updates when it changes
   
   // Optimized conversion function with fallbacks for different browsers
   const convertFiles = async () => {
@@ -333,9 +325,7 @@ function DropConvertInner() {
         workerRef.current.postMessage({
           type: processingType,
           files,
-          jpgToAvif, // Include conversion mode flags
-          heicToJpg, // Add HEIC to JPG conversion mode flag
-          conversionMode, // Pass the full conversion mode string
+          jpgToAvif, // Include conversion mode
           totalFiles, // Pass the actual file count to ensure worker has it
           isSingleFile: totalFiles === 1
         });
@@ -485,15 +475,8 @@ function DropConvertInner() {
   // Toggle between JPG-to-AVIF and AVIF-to-JPG modes
   // This controls the direction of conversion
   const toggleConversionMode = useCallback(() => {
-    // Toggle between conversion modes
-    if (conversionMode === 'jpgToAvif') {
-      setConversionMode('avifToJpg');
-    } else if (conversionMode === 'avifToJpg') {
-      setConversionMode('heicToJpg');
-    } else {
-      setConversionMode('jpgToAvif');
-    }
-  }, [conversionMode, setConversionMode]);
+    setJpgToAvif(prev => !prev);
+  }, []);
   
   // Display content based on the current status
   return (
@@ -502,18 +485,15 @@ function DropConvertInner() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold gradient-text">Convert Images</h2>
         <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg shadow-blue">
-          <span className={`text-sm ${conversionMode === 'avifToJpg' ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
+          <span className={`text-sm ${!jpgToAvif ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
             AVIF to JPG
           </span>
-          <span className={`text-sm ${conversionMode === 'heicToJpg' ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
-            HEIC to JPG
-          </span>
           <Switch 
-            checked={conversionMode === 'jpgToAvif'} 
+            checked={jpgToAvif} 
             onCheckedChange={toggleConversionMode} 
-            className={conversionMode === 'jpgToAvif' ? 'bg-primary' : ''}
+            className={jpgToAvif ? 'bg-primary' : ''}
           />
-          <span className={`text-sm ${conversionMode === 'jpgToAvif' ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
+          <span className={`text-sm ${jpgToAvif ? 'font-semibold text-primary' : 'text-muted-foreground'}`}>
             JPG to AVIF
           </span>
           <ArrowLeftRight className="ml-1.5 w-4 h-4 text-blue-500" />
@@ -534,10 +514,8 @@ function DropConvertInner() {
           <Cloud className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
           <p className="text-lg font-medium mb-1">Drag & drop images here</p>
           <p className="text-sm text-muted-foreground mb-3">
-            {conversionMode === 'jpgToAvif'
-              ? 'Convert JPG/PNG to space-saving AVIF format'
-              : conversionMode === 'heicToJpg'
-              ? 'Convert HEIC to widely-compatible JPG format'
+            {jpgToAvif
+              ? 'Convert JPG/PNG to space-saving AVIF format' 
               : 'Convert AVIF to widely-compatible JPG format'}
           </p>
           <Button
@@ -549,10 +527,8 @@ function DropConvertInner() {
               const input = document.createElement('input');
               input.type = 'file';
               input.multiple = true;
-              input.accept = conversionMode === 'jpgToAvif'
+              input.accept = jpgToAvif 
                 ? '.jpg,.jpeg,.png' 
-                : conversionMode === 'heicToJpg'
-                ? '.heic'
                 : '.avif';
               input.onchange = (e) => {
                 // @ts-ignore
@@ -575,11 +551,9 @@ function DropConvertInner() {
           <div className="mb-4">
             <h3 className="text-lg font-bold gradient-text mb-2">Ready to Convert {files.length} {files.length === 1 ? 'File' : 'Files'}</h3>
             <p className="text-sm text-muted-foreground">
-              {conversionMode === 'jpgToAvif'
+              {jpgToAvif
                 ? 'Convert to space-saving AVIF format'
-                : conversionMode === 'heicToJpg'
-                ? 'Convert HEIC to widely-compatible JPG format'
-                : 'Convert AVIF to widely-compatible JPG format'}
+                : 'Convert to widely-compatible JPG format'}
             </p>
           </div>
           
@@ -651,7 +625,7 @@ function DropConvertInner() {
                   const link = document.createElement('a');
                   link.href = downloadUrl;
                   link.download = files.length === 1 
-                    ? files[0].name.replace(/\.(avif|png|jpe?g|heic)$/i, conversionMode === 'jpgToAvif' ? '.avif' : '.jpg')
+                    ? files[0].name.replace(/\.(avif|png|jpe?g)$/i, jpgToAvif ? '.avif' : '.jpg')
                     : 'converted_images.zip';
                   document.body.appendChild(link);
                   link.click();

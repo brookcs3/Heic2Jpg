@@ -17,9 +17,7 @@ export default function Home() {
             <div className="text-center mb-8">
               <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
                 {siteConfig.defaultConversionMode === 'avifToJpg' 
-                  ? 'Convert AVIF to JPG'
-                  : siteConfig.defaultConversionMode === 'heicToJpg'
-                  ? 'Convert HEIC to JPG'
+                  ? 'Convert AVIF to JPG' 
                   : 'Convert JPG to AVIF'}
               </h1>
               <p className="mt-3 text-xl text-gray-500 sm:mt-4">

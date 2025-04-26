@@ -5,7 +5,7 @@
  */
 
 // Define conversion mode type
-export type ConversionMode = 'avifToJpg' | 'jpgToAvif' | 'heicToJpg';
+export type ConversionMode = 'avifToJpg' | 'jpgToAvif';
 
 // Define site configuration types
 export interface SiteConfig {
@@ -17,17 +17,6 @@ export interface SiteConfig {
   logoText: string;
   domain: string;
 }
-
-// Configuration for Heic2Jpg
-export const heic2JpgConfig: SiteConfig = {
-  siteName: 'Heic2Jpg',
-  defaultConversionMode: 'heicToJpg',
-  primaryColor: '#8b5cf6',    // Purple-500
-  secondaryColor: '#7c3aed',  // Purple-600
-  accentColor: '#a78bfa',     // Purple-400
-  logoText: 'Heic2Jpg',
-  domain: 'heic2-jpg.vercel.app'
-};
 
 // Configuration for JPGFlip
 const jpgFlipConfig: SiteConfig = {
@@ -53,9 +42,50 @@ const aviFlipConfig: SiteConfig = {
 
 // Determine which configuration to use based on hostname and URL parameters
 export function getSiteConfig(): SiteConfig {
-  // OVERRIDE: For Heic2Jpg project, always use Heic2Jpg config
-  console.log('USING HEIC2JPG CONFIG: Forced override for Heic2Jpg project');
-  return heic2JpgConfig;
+  // First check URL parameter (any of ?site=jpgflip or ?jpgflip or ?mode=jpgflip)
+  const urlParams = new URLSearchParams(window.location.search);
+  const forceSite = urlParams.get('site')?.toLowerCase();
+  
+  // Check for site parameter
+  if (forceSite === 'jpgflip') {
+    console.log('USING JPGFLIP CONFIG: URL site parameter override');
+    return jpgFlipConfig;
+  }
+  
+  if (forceSite === 'aviflip') {
+    console.log('USING AVIFLIP CONFIG: URL site parameter override');
+    return aviFlipConfig;
+  }
+  
+  // Check for direct parameter (no value needed)
+  if (urlParams.has('jpgflip')) {
+    console.log('USING JPGFLIP CONFIG: Direct URL parameter override');
+    return jpgFlipConfig;
+  }
+  
+  // Check for mode parameter
+  const mode = urlParams.get('mode')?.toLowerCase();
+  if (mode === 'jpgflip') {
+    console.log('USING JPGFLIP CONFIG: URL mode parameter override');
+    return jpgFlipConfig;
+  }
+  
+  // Then check hostname exactly
+  const hostname = window.location.hostname.toLowerCase();
+  
+  if (hostname === 'jpgflip.com' || hostname === 'www.jpgflip.com') {
+    console.log('USING JPGFLIP CONFIG: Hostname match');
+    return jpgFlipConfig;
+  }
+  
+  if (hostname === 'aviflip.com' || hostname === 'www.aviflip.com') {
+    console.log('USING AVIFLIP CONFIG: Hostname match');
+    return aviFlipConfig;
+  }
+  
+  // Default to aviflip config for all other cases
+  console.log('USING AVIFLIP CONFIG: Default fallback');
+  return aviFlipConfig;
 }
 
 // Export the current site configuration
