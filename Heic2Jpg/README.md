@@ -1,56 +1,58 @@
 # Heic2Jpg
 
-A web application that converts HEIC images to JPG format, built with React, TypeScript, and Express.
+A versatile and user-friendly tool for converting HEIC image files to JPG format with high-quality preservation.
 
 ## Features
 
-- Convert HEIC images to JPG format
-- Simple and intuitive user interface
-- Client-side processing using WebAssembly for fast conversions
-- Drag and drop file upload
-- Batch processing support
+- Simple drag-and-drop interface for uploading HEIC images
+- Batch conversion support for multiple files
+- High-quality preservation during conversion
+- Adjustable compression settings
+- Preview functionality before download
+- Fast, client-side conversion using modern web technologies
+- Cross-platform compatibility (works on any device with a modern browser)
+- No file size limits (depends only on your browser's capabilities)
+- Privacy-focused: all conversions happen in your browser, no server uploads
 
-## Technologies Used
+## Technologies
 
-- React with TypeScript for the frontend
-- Express for the backend
-- FFmpeg for image conversion
-- Tailwind CSS for styling
-- React Dropzone for file uploads
+- React with TypeScript for frontend
+- Vite for fast development and optimized builds
+- Web Workers for non-blocking conversion process
+- FFMPEG.wasm for image format conversion
+- TailwindCSS and shadcn/ui for a clean, responsive interface
 
-## Getting Started
+## Installation
 
-### Prerequisites
+```bash
+# Clone the repository
+git clone https://github.com/brookcs3/Heic2Jpg.git
+cd Heic2Jpg
 
-- Node.js 16 or higher
-- npm or yarn
+# Install dependencies
+npm install
 
-### Installation
-
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/Heic2Jpg.git
-   cd Heic2Jpg
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Start the development server:
-   ```
-   npm run dev
-   ```
-
-4. Open your browser and navigate to `http://localhost:5000`
+# Start the development server
+npm run dev
+```
 
 ## Usage
 
-1. Drag and drop HEIC files onto the upload area or click to select files
-2. The conversion will start automatically
-3. Download the converted JPG files
+1. Open the application in your browser (default: http://localhost:5000)
+2. Drag and drop HEIC files onto the conversion area (or click to browse)
+3. Adjust conversion settings if desired
+4. Click "Convert" to process your images
+5. Preview the converted JPG images
+6. Download individual images or all at once as a ZIP file
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Acknowledgements
+
+This project is inspired by other conversion tools like [AviFlip](https://github.com/brookcs3/AviFlip) and builds upon their concepts to provide an easy solution for HEIC to JPG conversion.
