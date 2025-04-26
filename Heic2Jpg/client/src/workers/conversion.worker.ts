@@ -3,17 +3,25 @@ import JSZip from 'jszip';
 
 // Process files in a web worker
 self.onmessage = async (event) => {
-  const { files, type, jpgToAvif, totalFiles, isSingleFile } = event.data;
+  const { files, type, jpgToAvif, heicToJpg, totalFiles, isSingleFile } = event.data;
   const fileCount = totalFiles || files.length;
   
+  // Determine conversion mode
+  const conversionMode = heicToJpg ? 'heicToJpg' : (jpgToAvif ? 'jpgToAvif' : 'avifToJpg');
+  
   // Reduce logging for production performance
-  // console.log('Worker received message:', { type, jpgToAvif, fileCount, isSingleFile, filesArrayLength: files.length });
+  // console.log('Worker received message:', { type, conversionMode, fileCount, isSingleFile, filesArrayLength: files.length });
   
   try {
     // Set up the correct MIME type and extension based on conversion direction
-    const outputMimeType = jpgToAvif ? 'image/avif' : 'image/jpeg';
-    const fileExtensionRegex = /\.(avif|png|jpe?g)$/i;
-    const outputExtension = jpgToAvif ? '.avif' : '.jpg';
+    let outputMimeType = 'image/jpeg';
+    let fileExtensionRegex = /\.(avif|png|jpe?g|heic)$/i;
+    let outputExtension = '.jpg';
+    
+    if (conversionMode === 'jpgToAvif') {
+      outputMimeType = 'image/avif';
+      outputExtension = '.avif';
+    }
     
     // Single file optimization path (including batch of 1)
     if (type === 'single' || files.length === 1) {

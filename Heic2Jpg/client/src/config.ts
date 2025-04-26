@@ -5,7 +5,7 @@
  */
 
 // Define conversion mode type
-export type ConversionMode = 'avifToJpg' | 'jpgToAvif';
+export type ConversionMode = 'avifToJpg' | 'jpgToAvif' | 'heicToJpg';
 
 // Define site configuration types
 export interface SiteConfig {
@@ -17,6 +17,17 @@ export interface SiteConfig {
   logoText: string;
   domain: string;
 }
+
+// Configuration for Heic2Jpg
+const heic2JpgConfig: SiteConfig = {
+  siteName: 'Heic2Jpg',
+  defaultConversionMode: 'heicToJpg',
+  primaryColor: '#8b5cf6',    // Purple-500
+  secondaryColor: '#7c3aed',  // Purple-600
+  accentColor: '#a78bfa',     // Purple-400
+  logoText: 'Heic2Jpg',
+  domain: 'heic2-jpg.vercel.app'
+};
 
 // Configuration for JPGFlip
 const jpgFlipConfig: SiteConfig = {
@@ -57,10 +68,20 @@ export function getSiteConfig(): SiteConfig {
     return aviFlipConfig;
   }
   
+  if (forceSite === 'heic2jpg') {
+    console.log('USING HEIC2JPG CONFIG: URL site parameter override');
+    return heic2JpgConfig;
+  }
+  
   // Check for direct parameter (no value needed)
   if (urlParams.has('jpgflip')) {
     console.log('USING JPGFLIP CONFIG: Direct URL parameter override');
     return jpgFlipConfig;
+  }
+  
+  if (urlParams.has('heic2jpg')) {
+    console.log('USING HEIC2JPG CONFIG: Direct URL parameter override');
+    return heic2JpgConfig;
   }
   
   // Check for mode parameter
@@ -68,6 +89,11 @@ export function getSiteConfig(): SiteConfig {
   if (mode === 'jpgflip') {
     console.log('USING JPGFLIP CONFIG: URL mode parameter override');
     return jpgFlipConfig;
+  }
+  
+  if (mode === 'heic2jpg') {
+    console.log('USING HEIC2JPG CONFIG: URL mode parameter override');
+    return heic2JpgConfig;
   }
   
   // Then check hostname exactly
@@ -83,9 +109,14 @@ export function getSiteConfig(): SiteConfig {
     return aviFlipConfig;
   }
   
-  // Default to aviflip config for all other cases
-  console.log('USING AVIFLIP CONFIG: Default fallback');
-  return aviFlipConfig;
+  if (hostname === 'heic2-jpg.vercel.app') {
+    console.log('USING HEIC2JPG CONFIG: Hostname match');
+    return heic2JpgConfig;
+  }
+  
+  // Default to Heic2Jpg config as the primary application
+  console.log('USING HEIC2JPG CONFIG: Default fallback');
+  return heic2JpgConfig;
 }
 
 // Export the current site configuration

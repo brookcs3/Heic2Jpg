@@ -40,18 +40,24 @@ function DropConvertInner() {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [fileCount, setFileCount] = useState<number>(0); // Store file count for later reference
   
-  // Mode selection: false = AVIF to JPG, true = JPG to AVIF
+  // Conversion mode state handling
   // Use site configuration to determine default conversion mode
-  const [jpgToAvif, setJpgToAvif] = useState(
-    siteConfig.defaultConversionMode === 'jpgToAvif'
-  );
+  const [conversionMode, setConversionMode] = useState(siteConfig.defaultConversionMode);
+  
+  // For backward compatibility with existing code
+  const jpgToAvif = conversionMode === 'jpgToAvif';
+  const heicToJpg = conversionMode === 'heicToJpg';
   
   // Update the page title when conversion mode changes
   useEffect(() => {
-    document.title = jpgToAvif 
-      ? `${siteConfig.siteName} - Convert JPG to AVIF in your browser`
-      : `${siteConfig.siteName} - Convert AVIF to JPG in your browser`;
-  }, [jpgToAvif]);
+    if (conversionMode === 'jpgToAvif') {
+      document.title = `${siteConfig.siteName} - Convert JPG to AVIF in your browser`;
+    } else if (conversionMode === 'heicToJpg') {
+      document.title = `${siteConfig.siteName} - Convert HEIC to JPG in your browser`;
+    } else {
+      document.title = `${siteConfig.siteName} - Convert AVIF to JPG in your browser`;
+    }
+  }, [conversionMode, siteConfig.siteName]);
   
   // Handle file drop
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -475,8 +481,15 @@ function DropConvertInner() {
   // Toggle between JPG-to-AVIF and AVIF-to-JPG modes
   // This controls the direction of conversion
   const toggleConversionMode = useCallback(() => {
-    setJpgToAvif(prev => !prev);
-  }, []);
+    // Toggle between conversion modes
+    if (conversionMode === 'jpgToAvif') {
+      setConversionMode('avifToJpg');
+    } else if (conversionMode === 'avifToJpg') {
+      setConversionMode('heicToJpg');
+    } else {
+      setConversionMode('jpgToAvif');
+    }
+  }, [conversionMode, setConversionMode]);
   
   // Display content based on the current status
   return (
