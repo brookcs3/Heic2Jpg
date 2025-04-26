@@ -1,5 +1,6 @@
 // Optimized conversion worker for image processing
 import JSZip from 'jszip';
+import heic2any from 'heic2any';
 
 // Process files in a web worker
 self.onmessage = async (event) => {
@@ -9,8 +10,7 @@ self.onmessage = async (event) => {
   // Determine conversion mode
   const conversionMode = heicToJpg ? 'heicToJpg' : (jpgToAvif ? 'jpgToAvif' : 'avifToJpg');
   
-  // Reduce logging for production performance
-  // console.log('Worker received message:', { type, conversionMode, fileCount, isSingleFile, filesArrayLength: files.length });
+  console.log('Worker received message:', { type, conversionMode, fileCount, isSingleFile, filesArrayLength: files.length });
   
   try {
     // Set up the correct MIME type and extension based on conversion direction
@@ -26,9 +26,29 @@ self.onmessage = async (event) => {
     // Single file optimization path (including batch of 1)
     if (type === 'single' || files.length === 1) {
       const file = files[0];
-      const fileData = await readFileAsArrayBuffer(file);
-      const resultBlob = new Blob([fileData], { type: outputMimeType });
+      let resultBlob;
       const originalName = file.name.replace(fileExtensionRegex, '');
+      
+      // Special handling for HEIC files
+      if (conversionMode === 'heicToJpg' && 
+          (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic')) {
+        console.log('Converting HEIC file to JPG', file.name);
+        try {
+          // Convert HEIC to JPEG using heic2any library
+          resultBlob = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.8
+          });
+        } catch (error) {
+          console.error('HEIC conversion error:', error);
+          throw new Error('Failed to convert HEIC image');
+        }
+      } else {
+        // Regular file handling for non-HEIC files
+        const fileData = await readFileAsArrayBuffer(file);
+        resultBlob = new Blob([fileData], { type: outputMimeType });
+      }
       
       self.postMessage({
         status: 'success', 
@@ -52,7 +72,6 @@ self.onmessage = async (event) => {
     // Process files in parallel for better performance
     const processedFiles = await Promise.all(files.map(async (file: File, index: number) => {
       const outputName = file.name.replace(fileExtensionRegex, outputExtension);
-      const fileData = await readFileAsArrayBuffer(file);
       
       // Report progress for each batch of files
       if (index % Math.max(1, Math.floor(totalFiles / 10)) === 0) {
@@ -63,7 +82,30 @@ self.onmessage = async (event) => {
         });
       }
       
-      return { name: outputName, data: fileData };
+      // Special handling for HEIC files in batch processing
+      if (conversionMode === 'heicToJpg' && 
+          (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic')) {
+        console.log('Converting HEIC file to JPG in batch mode', file.name);
+        try {
+          // Convert HEIC to JPEG using heic2any library
+          const jpegBlob = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.8
+          });
+          
+          // Convert blob to ArrayBuffer for ZIP
+          const buffer = await (jpegBlob as Blob).arrayBuffer();
+          return { name: outputName, data: buffer };
+        } catch (error) {
+          console.error('HEIC batch conversion error:', error);
+          throw new Error('Failed to convert HEIC image in batch');
+        }
+      } else {
+        // Regular file handling for non-HEIC files
+        const fileData = await readFileAsArrayBuffer(file);
+        return { name: outputName, data: fileData };
+      }
     }));
     
     // Add files to zip
